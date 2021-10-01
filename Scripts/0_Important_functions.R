@@ -1,7 +1,7 @@
 # Important functions ####
 
 ## synchrony function smooth ####
-gps <- read.csv2("Vole synchrony/Data/gps.csv")
+gps <- read.csv2("Data/gps.csv")
 
 sync_df5 <- function(res, round=0, dist_mat=gps$cumdist, method="pearson")
   # residuals as a smooth function of distance
@@ -26,7 +26,6 @@ sync_df5 <- function(res, round=0, dist_mat=gps$cumdist, method="pearson")
 
 
 ## functions for R squared ####
-setwd("OneDrive - UiT Office 365/")
 
 fitted_samples <- function(inlafit, ns=200)
 {
@@ -77,13 +76,8 @@ inla_R2 <-function(y_obs, inlafit, ns=200)
   
 } 
 
-# r1 <-inla_R2(y_obs=stackeddata$S_t.x,inlafit=spring_Ab)
-median(r1)
 
-
-
-gps <- read.csv2("~/OneDrive - UiT Office 365/Vole synchrony/Data/gps.csv")
-m <- data.frame(t(combn(as.numeric(rownames(gps)),2)), dist=as.numeric(distmat))
+# m <- data.frame(t(combn(as.numeric(rownames(gps)),2)), dist=as.numeric(distmat))
 
 rescor_distance <- function(res, round=0, dist_mat=gps$cumdist, method="spearman", nstations=19){
   res <- matrix(res, ncol=nstations)
