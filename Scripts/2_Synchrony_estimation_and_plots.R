@@ -17,8 +17,8 @@ for(i in 1:length(popres))
 }
 
 ### Obtain raw correlations as a function of distance -----
-Springcor <- sync_df5(matrix(stackeddata$S_t,ncol=19)) # raw
-Fallcor <- sync_df5(matrix(stackeddata$F_t,ncol=19))
+Springcor <- sync_df5(matrix(stackeddata$St,ncol=19)) # raw
+Fallcor <- sync_df5(matrix(stackeddata$Ft,ncol=19))
 
 # append raw correlation synchrony
 synclist <- append(synclist_p,list(Springcor,Fallcor))
@@ -52,10 +52,11 @@ for(i in 1:length(synclist)){
 
 ### Plots of synchrony with distance --------
 # spring seas, spring yr, Fall seas, Fall Yr, Spring raw, Fall Raw
-pdf("Plots/scale_raw_year_seas.pdf", width = 7.7, height= 5.4)
+pdf("Plots/scale_raw_year_seas2.pdf", width = 7.7, height= 5.4)
 j=1 # parameter for the legend
 mainlabel <- c("(a)", "(b)", "(c)")
 par(mfrow=c(1,3), mar=c(5, 1, 2, 2) + 0.1 , mai=c(.6, .1, .2, .1),oma=c(.5, 4, 1.5, 1.5))
+i=3
 for (i in c(5,3,1))
 {
   
@@ -98,13 +99,7 @@ for (i in c(5,3,1))
     col = rgb(0, .4, 0, 0.5),
     border = NULL
   )
-  lines(
-    modsynclist[[i]]$summary.random$dist$ID,
-    modsynclist[[i]]$summary.fitted.values$mean,
-    col = "darkgreen",
-    lty = 1,
-    lwd = 3
-  )
+
   
   
   min_a <- pmin(modsynclist[[i + 1]]$summary.fitted.values$`0.025quant`)
@@ -117,6 +112,14 @@ for (i in c(5,3,1))
     c(max_a , rev(min_a)),
     col = rgb(1, .5, 0, 0.5),
     border = NULL
+  )
+  
+  lines(
+    modsynclist[[i]]$summary.random$dist$ID,
+    modsynclist[[i]]$summary.fitted.values$mean,
+    col = "darkgreen",
+    lty = 1,
+    lwd = 3
   )
   
   lines(
