@@ -3,12 +3,70 @@
 library(INLA)
 #stackeddata <- readRDS("Data/stacked_data.rds")
 stackeddata <- readRDS("Data/data4synchrony.rds")
+View(stackeddata)
 # expanded stacked data with extra variables
-#stackeddata2 <- readRDS("~/OneDrive - UiT Office 365/Vole Synchrony/data/stacked_data2.rds")
+# stackeddata2 <- readRDS("~/OneDrive - UiT Office 365/Vole Synchrony/data/stacked_data2.rds")
 
 # growth rates instead
 GR_data0 <- readRDS("Vole Synchrony/data/log_centered_INLACR_growthrates.rds")
-## Hansen 1999 Models =======
+
+## AR(2) models =======
+
+### Spring AR model ----
+# (II) Spring
+
+St_II <- inla(St ~ St_1 + St_2
+                # + f(time, mod="rw2", scale.model = TRUE,
+                #            hyper = list(theta = list(prior="pc.prec", param=c(u=1,0.01))))
+                # , family="gaussian"
+                ,
+                control.predictor = list(compute = TRUE),
+                control.compute = list(config = TRUE),
+                data=stackeddata)
+
+### Fall AR model ####
+# (II) Fall
+Ft_II <- inla(Ft ~ Ft_1 + Ft_2
+                # + f(time, mod="rw2", scale.model = TRUE,
+                #            hyper = list(theta = list(prior="pc.prec", param=c(u=1,0.01))))
+                # , family="gaussian"
+                ,
+                control.predictor = list(compute = TRUE),
+                control.compute = list(config = TRUE),
+                data=stackeddata)
+
+
+## AR(2) + region (III) models =======
+
+### Spring Yearly model ----
+# (III) Spring
+
+St_III <- inla(St ~ 
+                  St_1.1 + St_1.2 + St_1.3 +
+                  St_2.1 + St_2.2 + St_2.3 
+                # + f(time, mod="rw2", scale.model = TRUE,
+                #            hyper = list(theta = list(prior="pc.prec", param=c(u=1,0.01))))
+                # , family="gaussian"
+                ,
+                control.predictor = list(compute = TRUE),
+                control.compute = list(config = TRUE),
+                data=stackeddata)
+
+### Fall Yearly model ####
+# (III) Fall
+Ft_III <- inla(Ft ~ 
+                  Ft_1.1 + Ft_1.2 + Ft_1.3 +
+                  Ft_2.1 + Ft_2.2 + Ft_2.3 
+                # + f(time, mod="rw2", scale.model = TRUE,
+                #            hyper = list(theta = list(prior="pc.prec", param=c(u=1,0.01))))
+                # , family="gaussian"
+                ,
+                control.predictor = list(compute = TRUE),
+                control.compute = list(config = TRUE),
+                data=stackeddata)
+
+
+## Season + region Models (IV) =======
 ### Spring seasonal model ####
 
 # St_seasonal <- inla(S_t ~ 
@@ -23,8 +81,8 @@ GR_data0 <- readRDS("Vole Synchrony/data/log_centered_INLACR_growthrates.rds")
 #                     control.predictor = list(compute = TRUE),
 #                     control.compute = list(config = TRUE),
 #                     data=stackeddata)
-
-St_seasonal <- inla(St ~ 
+# (IV) Spring
+St_IV <- inla(St ~ 
                       Ft_1.1 + Ft_1.2 + Ft_1.3 +
                       St_1.1 + St_1.2 + St_1.3 +
                       Ft_2.1 + Ft_2.2 + Ft_2.3 +
@@ -50,7 +108,9 @@ St_seasonal <- inla(St ~
 #                     control.compute = list(config = TRUE),
 #                     data=stackeddata)
 
-Ft_seasonal <- inla(Ft ~ St.1 + St.2 + St.3 +
+# (IV) Fall
+
+Ft_IV <- inla(Ft ~ St.1 + St.2 + St.3 +
                       Ft_1.1 + Ft_1.2 + Ft_1.3 +
                       St_1.1 + St_1.2 + St_1.3 +
                       Ft_2.1 + Ft_2.2 + Ft_2.3 
@@ -62,33 +122,10 @@ Ft_seasonal <- inla(Ft ~ St.1 + St.2 + St.3 +
                     control.compute = list(config = TRUE),
                     data=stackeddata)
 
-### Spring Yearly model ####
-St_year <- inla(St ~ 
-                  St_1.1 + St_1.2 + St_1.3 +
-                  St_2.1 + St_2.2 + St_2.3 
-                # + f(time, mod="rw2", scale.model = TRUE,
-                #            hyper = list(theta = list(prior="pc.prec", param=c(u=1,0.01))))
-                # , family="gaussian"
-                ,
-                control.predictor = list(compute = TRUE),
-                control.compute = list(config = TRUE),
-                data=stackeddata)
-
-### Fall Yearly model ####
-Ft_year <- inla(Ft ~ 
-                  Ft_1.1 + Ft_1.2 + Ft_1.3 +
-                  Ft_2.1 + Ft_2.2 + Ft_2.3 
-                # + f(time, mod="rw2", scale.model = TRUE,
-                #            hyper = list(theta = list(prior="pc.prec", param=c(u=1,0.01))))
-                # , family="gaussian"
-                ,
-                control.predictor = list(compute = TRUE),
-                control.compute = list(config = TRUE),
-                data=stackeddata)
-
-
 ### List of All models ####
-popmodels <- list(St_seasonal=St_seasonal,St_year=St_year,Ft_seasonal=Ft_seasonal,Ft_year=Ft_year)
+# popmodels <- list(St_seasonal=St_seasonal,St_year=St_year,Ft_seasonal=Ft_seasonal,Ft_year=Ft_year)
+popmodels <- list(St_II=St_II,St_III=St_III,St_IV=St_IV,
+                  Ft_II=Ft_II,Ft_III=Ft_III,Ft_IV=Ft_IV)
 
 
 
@@ -97,26 +134,33 @@ popmodels <- list(St_seasonal=St_seasonal,St_year=St_year,Ft_seasonal=Ft_seasona
 source("Scripts/0_Important_functions.R")
 
 # obtain residuals using Bayesian sample
-St_seas_res <- matrix(residual_samples(stackeddata$St, St_seasonal, ns=200, mean = TRUE),ncol=19)
-Ft_seas_res <- matrix(residual_samples(stackeddata$Ft, Ft_seasonal, ns=200, mean = TRUE),ncol=19)
-St_year_res <- matrix(residual_samples(stackeddata$St, St_year, ns=200, mean = TRUE),ncol=19)
-Ft_year_res <- matrix(residual_samples(stackeddata$Ft, Ft_year, ns=200, mean = TRUE),ncol=19)
+St_II_res <- matrix(residual_samples(stackeddata$St, St_II, ns=200, mean = TRUE),ncol=19)
+Ft_II_res <- matrix(residual_samples(stackeddata$Ft, Ft_II, ns=200, mean = TRUE),ncol=19)
+St_III_res <- matrix(residual_samples(stackeddata$St, St_III, ns=200, mean = TRUE),ncol=19)
+Ft_III_res <- matrix(residual_samples(stackeddata$Ft, Ft_III, ns=200, mean = TRUE),ncol=19)
+St_IV_res <- matrix(residual_samples(stackeddata$St, St_IV, ns=200, mean = TRUE),ncol=19)
+Ft_IV_res <- matrix(residual_samples(stackeddata$Ft, Ft_IV, ns=200, mean = TRUE),ncol=19)
 
-popres <- list(St_seasonal=St_seas_res,Ft_seasonal=Ft_seas_res,St_year=St_year_res,Ft_year=Ft_year_res)
+popres <- list(St_II=St_II_res,    Ft_II=Ft_II_res,
+               St_III=St_III_res,  Ft_III=Ft_III_res,
+               St_IV=St_IV_res,    Ft_IV=Ft_IV_res)
 
 saveRDS(popres,"Data/popmodels_residuals.rds")
 
 # Plots ####
 ## plot models figure 2 ####
 library(plotrix)
-ss <- popmodels$St_seasonal$summary.fixed
-fs <- popmodels$Ft_seasonal$summary.fixed
-sy <- popmodels$St_seasonal$summary.fixed
-fy <- popmodels$St_seasonal$summary.fixed
+sII <- popmodels$St_II$summary.fixed
+sIII <- popmodels$St_III$summary.fixed
+sIV <- popmodels$St_IV$summary.fixed
+
+FII <- popmodels$Ft_II$summary.fixed
+FIII <- popmodels$Ft_III$summary.fixed
+FIV <- popmodels$Ft_IV$summary.fixed
 
 
 ### spring coefficients ####
-datx <- ss[-1,]
+datx <- sIV[-1,]
 
 pdf("Plots/spring_seas_coefs.pdf", width=6, height = 6)
 par(mar=c(2,4,1,1),mfrow=c(1,1))
@@ -142,9 +186,9 @@ par(mar=c(2,4,1,1),mfrow=c(1,1))
 plot(1, type="n", xlab="",ylab="", ylim=c(-1, 1), xlim=c(1,12), xaxt="n",
      yaxt="n", frame.plot = FALSE)
 
-datx <- fs[-1,]
-
 ### fall coefficients ####
+datx <- FIV[-1,]
+
 plotCI(1:12,y= datx[,4],datx[,5]-datx[,4],datx[,4]-datx[,3], col=rep(c(4,3,7),4), add=TRUE)
 Axis(side=2)
 abline(h=0, lty=3)
