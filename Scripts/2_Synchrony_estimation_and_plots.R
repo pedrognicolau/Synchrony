@@ -6,6 +6,8 @@ library(rlang)
 ## Read in data ---------------
 source("Scripts/0_Important_functions.R")
 popres <- readRDS("Data/popmodels_residuals.rds")
+stackeddata <- readRDS("Data/data4synchrony.rds")
+
 str(popres)
 synclist_p = synclist_s = list()
 
@@ -28,7 +30,7 @@ synclist <- append(synclist_p,list(Springcor,Fallcor))
 modsynclist <- list()
 
 par(mfrow=c(2,3))
-
+i=1
 for(i in 1:length(synclist)){
   dat <- synclist[[i]]
   
@@ -48,7 +50,15 @@ for(i in 1:length(synclist)){
   
   
 }
+synclist
+par(mfrow=c(2,3))
+for(i in 1:6) hist(synclist[[i]][,2], breaks=seq(-1,1,0.15))
+for(i in 1:6) print(shapiro.test(synclist[[i]][,2]))
 
+plot(syncmod1$summary.random$dist$ID, syncmod1$summary.fitted.values$mean, xlab="distance", ylab=expression(Ro), 
+     ylim=c(0,.7), main="", type="l", lwd=1.5, col=i)    
+lines(syncmod1$summary.random$dist$ID, syncmod1$summary.fitted.values$`0.025quant`, lty=2)    
+lines(syncmod1$summary.random$dist$ID, syncmod1$summary.fitted.values$`0.975quant`, lty=2)   
 
 ### Plots of synchrony with distance --------
 # spring seas, spring yr, Fall seas, Fall Yr, Spring raw, Fall Raw
