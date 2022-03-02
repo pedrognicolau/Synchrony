@@ -205,18 +205,44 @@ dev.off()
 ## R2 Plots
 
 
-st_r2 <- inla_R2(stackeddata$St,St_seasonal, 1000) 
-ft_r2 <- inla_R2(stackeddata$Ft,Ft_seasonal, 1000) 
+stII_r2 <- inla_R2(stackeddata$St,St_II, 1000) 
+ftII_r2 <- inla_R2(stackeddata$Ft,Ft_II, 1000) 
 
-pdf("Plots/r2_seasonalmodels.pdf", width=6, height = 6)
-par(mar=c(4,2,1,1),mfrow=c(1,1))
-hist(st_r2, breaks=seq(0.2,0.7,0.01), ylim = c(0,20), col=scales::alpha("green4",.6), xlab = expression(R^2), probability = TRUE, main = "", border=F, yaxt="n",
+stIII_r2 <- inla_R2(stackeddata$St,St_III, 1000) 
+ftIII_r2 <- inla_R2(stackeddata$Ft,Ft_III, 1000) 
+
+stIV_r2 <- inla_R2(stackeddata$St,St_IV, 1000) 
+ftIV_r2 <- inla_R2(stackeddata$Ft,Ft_IV, 1000)
+
+pdf("Plots/r2_4models.pdf", width=6, height = 6)
+#c(bottom, left, top, right)
+par(mar=c(0.2,0,0,0)+.5,mfrow=c(3,1), oma=c(5, 0,0,0))
+hist(stII_r2, breaks=seq(0,.7,0.01), col=scales::alpha(4,.6), 
+     xlab = "", probability = TRUE, main = "", border=F, yaxt="n",ylim = c(0,20),
      ylab="")
+hist(ftII_r2, breaks=seq(0,1,0.01), add=TRUE, col=scales::alpha(2,.6), xlab = "", probability = TRUE, main = "", border=F, yaxt="n",
+     ylab="")
+text(x=.65,y=15," (II)", cex=1.2)
 
-mtext("Number of Samples", side=2, line=0, at=10, cex=1.2)
+
+hist(stIII_r2, breaks=seq(0,0.7,0.011), col=scales::alpha(4,.7), 
+     xlab = "", probability = TRUE, main = "", border=F, yaxt="n",ylim = c(0,20),
+     ylab="")
+hist(c, breaks=seq(0,0.7,0.011), add=TRUE, col=scales::alpha(2,.7), probability=TRUE, border=F)
+text(x=.65,y=15,"(III)", cex=1.2)
+mean(stIV_r2)
+mean(ftII_r2)
+
+hist(stIV_r2, breaks=seq(0,0.7,0.011), col=scales::alpha(4,.7), 
+     xlab = "", probability = TRUE, main = "", border=F, yaxt="n",ylim = c(0,20),
+     ylab="")
+hist(ftIV_r2, breaks=seq(0,0.7,0.011), add=TRUE, col=scales::alpha(2,.7), probability=TRUE, border=F)
+text(x=.65,y=15,"(IV)", cex=1.2)
+
+mtext(expression(R^2), side=1, line=4, at=0.35, cex=1.5)
 #Axis(side = 2, at=NULL)
-abline(v=median(st_r2), lwd=1, lty=2)
-hist(ft_r2, breaks=seq(0,0.7,0.011), add=TRUE, col=scales::alpha("orange1",.7), probability=TRUE, border=F)
-abline(v=median(ft_r2), lwd=1, lty=2)
+# abline(v=median(st_r2), lwd=1, lty=2)
+# hist(stII_r2, breaks=seq(0,0.7,0.011), add=TRUE, col=scales::alpha("orange1",.7), probability=TRUE, border=F)
+# abline(v=median(ft_r2), lwd=1, lty=2)
 dev.off()
 
