@@ -52,6 +52,7 @@ seasondata$St_1 <- as.vector(St_1mat)
 seasondata$St_2 <- as.vector(St_2mat)
 seasondata$Ft_1 <- as.vector(Ft_1mat)
 seasondata$Ft_2 <- as.vector(Ft_2mat)
+View(seasondata)
 # df for stacked data -----
 # add 0's for regional data
 stackdf0 <- data.frame(seasondata,seasondata[,6:11],seasondata[,6:11],seasondata[,6:11])
