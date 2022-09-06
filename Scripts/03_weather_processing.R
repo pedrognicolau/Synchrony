@@ -1,6 +1,6 @@
 # read in data 
 library(dplyr)
-
+library(lubridate)
 # read in climate files ------
 porpath <- "Data/pors klima/"
 dir_pors <- sort(dir(porpath))
@@ -178,7 +178,7 @@ icedf3 <- arrange(icedf2, station2, year)
 icedf4 <- icedf3[,c(1,6,4,5,3)]
 head(icedf4)
 names(icedf4)[c(2,5)] <- c("station","station_name")
-write.csv2(icedf4,"Vole Synchrony/Data/winter_precipitation.csv")
+saveRDS(icedf4,"Data/winter_precipitation.rds")
 
 i=1
 
@@ -224,121 +224,16 @@ Axis(side=1, labels=TRUE, cex.axis = 1, pos=-10)
 Axis(side=2, labels=TRUE, cex.axis = 1, at=c(0,50,100,150))
 dev.off()
 
-## abundances per season ----
-pdf("Plots/seasonal_abundances.pdf", height=4,width=7.3)
-abundanceCR <- readRDS("Data/Abundance_CRINLA_zeroc3.rds")
-abundanceCR$season <- rep(c(0,1),nrow(abundanceCR)/2)
-abundanceCR$station <- as.numeric(abundanceCR$station)
-stations <- unique(abundanceCR$station)
-
-truecols <- c(rep(4,5),rep(3,8),rep(7,7))
-
-par(mfrow=c(2,1), mar=c(2.2, 2, 0.8, 1.5) + 0.1) # B, L, T, R
-
-plot(0, 0, col="white", xlim=c(1999.5,2020.5), xlab="Distance (km)", ylim=c(-2,60),
-     ylab="",
-     axes = FALSE,xaxs = "i",yaxs="i",yaxt = "n")
-abline(h=c(10,20,30,40,50,60),lty=3, col="gray80")
-
-for(i in stations)
-{
-  plot_data <- dplyr::filter(abundanceCR, station == stations[i] & season == 0)
-  
-  lines(2000:2020, plot_data$inlacr, type="b", col=scales::alpha(truecols[i], .5), pch=19, lty=1)
-}
-Axis(side=1, labels=TRUE, cex.axis = 1, pos=-5)
-Axis(side=2, labels=TRUE, cex.axis = 1, at=c(0,20,40,60))
-
-plot(0, 0, col="white", xlim=c(1999.5,2020.5), xlab="Distance (km)", ylim=c(-2,60),
-     ylab="",
-     axes = FALSE,xaxs = "i",yaxs="i",yaxt = "n")
-abline(h=c(10,20,30,40,50,60),lty=3, col="gray80")
-
-for(i in stations)
-{
-  plot_data <- dplyr::filter(abundanceCR, station == stations[i] & season == 1)
-  
-  lines(2000:2020, plot_data$inlacr, type="b", col=scales::alpha(truecols[i], .5), pch=19, lty=1)
-}
-Axis(side=1, labels=TRUE, cex.axis = 1, pos=-5)
-Axis(side=2, labels=TRUE, cex.axis = 1, at=c(0,20,40,60))
-dev.off()
-#### get seasonal aggregated weather data - Prec + Temp ####
-head(wdata3.2)
-
-SDF <- distinct(wdata3.2, year,season)
-SDF$spring.no <- c(0,0,rep(1:21,each=4))
-SDF$spring.no <- ifelse(SDF$season=="SPRING",SDF$spring.no,0)
-SDF$summer.no <- c(0,0,rep(1:21,each=4))
-SDF$summer.no <- ifelse(SDF$season=="SUMMER",SDF$summer.no,0)
-SDF$fall.no <- c(0,0,rep(1:21,each=4))
-SDF$fall.no <- ifelse(SDF$season=="FALL",SDF$fall.no,0)
-
-wdata_s2f <- left_join(wdata3.2,SDF)
-head(wdata3.2)
-seasonaltempdata <- aggregate(cbind(Temp.mn)~year+spring.no+fall.no+summer.no+station, data=wdata_s2f, FUN = mean)
-seasonalraindata <- aggregate(cbind(Temp.mn)~year+spring.no+fall.no+summer.no+station, data=wdata_s2f, FUN = sum)
-
-#### seasonal temperature data ####
-seastd <- filter(seasonaltempdata, seasonaltempdata$spring.no+seasonaltempdata$fall.no+seasonaltempdata$summer.no>0)
-matrix(seastd$Temp.mn, ncol=3)
-
-springdf <- filter(seastd, spring.no>0)
-colnames(springdf)[6] <- "spring_temp_mn"
-springdf2 <- springdf[,c(1,5,6)]
-summerdf <- filter(seastd, summer.no>0)
-colnames(summerdf)[6] <- "summer_temp_mn"
-summerdf2 <- summerdf[,c(1,5,6)]
-falldf <- filter(seastd, fall.no>0)
-colnames(falldf)[6] <- "fall_temp_mn"
-falldf2 <- falldf[,c(1,5,6)]
-
-seasons_weather1 <-  left_join(springdf2,summerdf2)
-seasons_weather2 <-  left_join(seasons_weather1,falldf2)
-
-#### seasonal rain data ####
-
-seasfd <- filter(seasonalraindata, seasonalraindata$spring.no+seasonalraindata$fall.no+seasonalraindata$summer.no>0)
-
-pspringdf <- filter(seasfd, spring.no>0)
-colnames(pspringdf)[6] <- "spring_prec_sum"
-pspringdf2 <- pspringdf[,c(1,5,6)]
-psummerdf <- filter(seasfd, summer.no>0)
-colnames(psummerdf)[6] <- "summer_prec_sum"
-psummerdf2 <- psummerdf[,c(1,5,6)]
-pfalldf <- filter(seasfd, fall.no>0)
-colnames(pfalldf)[6] <- "fall_prec_sum"
-pfalldf2 <- pfalldf[,c(1,5,6)]
-
-seasons_weather3 <-  left_join(seasons_weather2,pspringdf2)
-seasons_weather4 <-  left_join(seasons_weather3,psummerdf2)
-seasons_weather5 <-  left_join(seasons_weather4,pfalldf2)
-
-
-#### get winter temperature / prec
-winterdata <- do.call(data.frame, aggregate(cbind(Prec.sum,Temp.mn)~winternumber+station, data=wdata3.2,
-                                    FUN = function(x) c(mn = mean(x), sum = sum(x) )))
-
-winterdata2 <- filter(winterdata, winternumber>0)
-winterdata3 <- winterdata2[,c(1,2,4,5)]
-names(winterdata3)[3:4] <- c("winter_prec_sum","winter_temp_mn")
-
-winterlabel <- data.frame(winternumber=1:21, year=2000:2020)
-winterdata4 <- left_join(winterlabel,winterdata3)
-seasons_weather6 <- left_join(seasons_weather5,winterdata4)
-
-stdflab <- data.frame(st=unique(wdata3$station), station=c(1,10:19,2,20,3:8,21:24))
-colnames(seasons_weather6)[2] <- "st"
-seasons_weather7 <- left_join(seasons_weather6, stdflab)
-seasons_weather8 <- left_join(seasons_weather7, icedf4)
-seasons_weather9 <- select(seasons_weather8, -c(st))
-filter(seasons_weather9, station==20)
-
-
-write.csv2(seasons_weather9, "Vole Synchrony/data/seasonal_weather.csv")
 
 ######## join abundance and weather data ########
-seasons_weather9 <- tibble(read.csv2("Vole Synchrony/data/seasonal_weather.csv")[,-1])
+
+Wdata <- icedf4
+Wdata2 <- filter(Wdata, !(station %in% c("T1 S2","T2 S1","T3 S1", "T5 S2")))
+nrow(Wdata2)
+# sstation <- function(x) as.numeric(strsplit(x,"S")[[1]][2])
+saveRDS(Wdata2,"Data/weather_vars.rds")
+
+
 GR_data0 <- readRDS("Vole Synchrony/data/log_centered_INLACR_growthrates.rds")
 GR_data0$station <- ifelse(GR_data0$station>8,GR_data0$station+1,seasons_weather9$station)
 unique(GR_data0$station)
@@ -353,7 +248,119 @@ saveRDS(s10, "Vole Synchrony/data/seasonal_weather.rds")
 summary(GR_weather)
 
 
-
+# ## abundances per season ----
+# pdf("Plots/seasonal_abundances.pdf", height=4,width=7.3)
+# abundanceCR <- readRDS("Data/Abundance_CRINLA_zeroc3.rds")
+# abundanceCR$season <- rep(c(0,1),nrow(abundanceCR)/2)
+# abundanceCR$station <- as.numeric(abundanceCR$station)
+# stations <- unique(abundanceCR$station)
+# 
+# truecols <- c(rep(4,5),rep(3,8),rep(7,7))
+# 
+# par(mfrow=c(2,1), mar=c(2.2, 2, 0.8, 1.5) + 0.1) # B, L, T, R
+# 
+# plot(0, 0, col="white", xlim=c(1999.5,2020.5), xlab="Distance (km)", ylim=c(-2,60),
+#      ylab="",
+#      axes = FALSE,xaxs = "i",yaxs="i",yaxt = "n")
+# abline(h=c(10,20,30,40,50,60),lty=3, col="gray80")
+# 
+# for(i in stations)
+# {
+#   plot_data <- dplyr::filter(abundanceCR, station == stations[i] & season == 0)
+#   
+#   lines(2000:2020, plot_data$inlacr, type="b", col=scales::alpha(truecols[i], .5), pch=19, lty=1)
+# }
+# Axis(side=1, labels=TRUE, cex.axis = 1, pos=-5)
+# Axis(side=2, labels=TRUE, cex.axis = 1, at=c(0,20,40,60))
+# 
+# plot(0, 0, col="white", xlim=c(1999.5,2020.5), xlab="Distance (km)", ylim=c(-2,60),
+#      ylab="",
+#      axes = FALSE,xaxs = "i",yaxs="i",yaxt = "n")
+# abline(h=c(10,20,30,40,50,60),lty=3, col="gray80")
+# 
+# for(i in stations)
+# {
+#   plot_data <- dplyr::filter(abundanceCR, station == stations[i] & season == 1)
+#   
+#   lines(2000:2020, plot_data$inlacr, type="b", col=scales::alpha(truecols[i], .5), pch=19, lty=1)
+# }
+# Axis(side=1, labels=TRUE, cex.axis = 1, pos=-5)
+# Axis(side=2, labels=TRUE, cex.axis = 1, at=c(0,20,40,60))
+# dev.off()
+# #### get seasonal aggregated weather data - Prec + Temp ####
+# head(wdata3.2)
+# 
+# SDF <- distinct(wdata3.2, year,season)
+# SDF$spring.no <- c(0,0,rep(1:21,each=4))
+# SDF$spring.no <- ifelse(SDF$season=="SPRING",SDF$spring.no,0)
+# SDF$summer.no <- c(0,0,rep(1:21,each=4))
+# SDF$summer.no <- ifelse(SDF$season=="SUMMER",SDF$summer.no,0)
+# SDF$fall.no <- c(0,0,rep(1:21,each=4))
+# SDF$fall.no <- ifelse(SDF$season=="FALL",SDF$fall.no,0)
+# 
+# wdata_s2f <- left_join(wdata3.2,SDF)
+# head(wdata3.2)
+# seasonaltempdata <- aggregate(cbind(Temp.mn)~year+spring.no+fall.no+summer.no+station, data=wdata_s2f, FUN = mean)
+# seasonalraindata <- aggregate(cbind(Temp.mn)~year+spring.no+fall.no+summer.no+station, data=wdata_s2f, FUN = sum)
+# 
+# #### seasonal temperature data ####
+# seastd <- filter(seasonaltempdata, seasonaltempdata$spring.no+seasonaltempdata$fall.no+seasonaltempdata$summer.no>0)
+# matrix(seastd$Temp.mn, ncol=3)
+# 
+# springdf <- filter(seastd, spring.no>0)
+# colnames(springdf)[6] <- "spring_temp_mn"
+# springdf2 <- springdf[,c(1,5,6)]
+# summerdf <- filter(seastd, summer.no>0)
+# colnames(summerdf)[6] <- "summer_temp_mn"
+# summerdf2 <- summerdf[,c(1,5,6)]
+# falldf <- filter(seastd, fall.no>0)
+# colnames(falldf)[6] <- "fall_temp_mn"
+# falldf2 <- falldf[,c(1,5,6)]
+# 
+# seasons_weather1 <-  left_join(springdf2,summerdf2)
+# seasons_weather2 <-  left_join(seasons_weather1,falldf2)
+# 
+# #### seasonal rain data ####
+# 
+# seasfd <- filter(seasonalraindata, seasonalraindata$spring.no+seasonalraindata$fall.no+seasonalraindata$summer.no>0)
+# 
+# pspringdf <- filter(seasfd, spring.no>0)
+# colnames(pspringdf)[6] <- "spring_prec_sum"
+# pspringdf2 <- pspringdf[,c(1,5,6)]
+# psummerdf <- filter(seasfd, summer.no>0)
+# colnames(psummerdf)[6] <- "summer_prec_sum"
+# psummerdf2 <- psummerdf[,c(1,5,6)]
+# pfalldf <- filter(seasfd, fall.no>0)
+# colnames(pfalldf)[6] <- "fall_prec_sum"
+# pfalldf2 <- pfalldf[,c(1,5,6)]
+# 
+# seasons_weather3 <-  left_join(seasons_weather2,pspringdf2)
+# seasons_weather4 <-  left_join(seasons_weather3,psummerdf2)
+# seasons_weather5 <-  left_join(seasons_weather4,pfalldf2)
+# 
+# 
+# #### get winter temperature / prec
+# winterdata <- do.call(data.frame, aggregate(cbind(Prec.sum,Temp.mn)~winternumber+station, data=wdata3.2,
+#                                     FUN = function(x) c(mn = mean(x), sum = sum(x) )))
+# 
+# winterdata2 <- filter(winterdata, winternumber>0)
+# winterdata3 <- winterdata2[,c(1,2,4,5)]
+# names(winterdata3)[3:4] <- c("winter_prec_sum","winter_temp_mn")
+# 
+# winterlabel <- data.frame(winternumber=1:21, year=2000:2020)
+# winterdata4 <- left_join(winterlabel,winterdata3)
+# seasons_weather6 <- left_join(seasons_weather5,winterdata4)
+# 
+# stdflab <- data.frame(st=unique(wdata3$station), station=c(1,10:19,2,20,3:8,21:24))
+# colnames(seasons_weather6)[2] <- "st"
+# seasons_weather7 <- left_join(seasons_weather6, stdflab)
+# seasons_weather8 <- left_join(seasons_weather7, icedf4)
+# seasons_weather9 <- select(seasons_weather8, -c(st))
+# filter(seasons_weather9, station==20)
+# 
+# 
+# write.csv2(seasons_weather9, "Vole Synchrony/data/seasonal_weather.csv")
+# 
 
 ######## EXTRA ###########
 wdata4 <- left_join(wdata3,mdata3)

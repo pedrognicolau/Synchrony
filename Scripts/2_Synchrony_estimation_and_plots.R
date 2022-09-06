@@ -10,7 +10,7 @@ stackeddata <- readRDS("Data/data4synchrony.rds")
 
 str(popres)
 synclist_p = synclist_s = list()
-
+str(popres)
 ## Compute correlation matrices ---------
 for(i in 1:length(popres))
 { # St_seasonal, Ft_seasonal, St_year, Ft_year
@@ -21,7 +21,7 @@ for(i in 1:length(popres))
 ### Obtain raw correlations as a function of distance (I) -----
 Springcor <- sync_df5(matrix(stackeddata$St,ncol=19)) # raw
 Fallcor <- sync_df5(matrix(stackeddata$Ft,ncol=19))
-
+mean(Fallcor$corres)
 # append raw correlation synchrony
 synclist <- append(list(Springcor,Fallcor),synclist_p)
 
@@ -30,14 +30,12 @@ synclist <- append(list(Springcor,Fallcor),synclist_p)
 modsynclist <- list()
 
 par(mfrow=c(2,4))
-i=1
 for(i in 1:length(synclist)){
-  i=8
   dat <- synclist[[i]]
   
   colnames(dat) <- c("distance","mean.res")
   syncmod1 <- inla(mean.res ~ f(distance, model="rw2", scale.model = TRUE,
-                                hyper = list(theta = list(prior="pc.prec", param=c(u=.5,0.1))))
+                                hyper = list(theta = list(prior="pc.prec", param=c(u=.5,0.01))))
                    , family="gaussian", control.predictor = list(compute=TRUE)
                    ,data=dat)
   msum0 <- syncmod1$summary.random$distance
@@ -50,10 +48,10 @@ for(i in 1:length(synclist)){
   lines(syncmod1$summary.random$dist$ID, syncmod1$summary.fitted.values$`0.975quant`, lty=2)   
   
   dat <- synclist[[i]]
-  plot(synclist[[7]]$dist, synclist[[7]]$corres, xlab="distance", col=4, pch=19, ylim=c(-.2,1))    
-  points(synclist[[8]]$dist, synclist[[8]]$corres, xlab="distance", col=2, pch=19)    
+  plot(synclist[[i]]$dist, synclist[[i]]$corres, xlab="distance", col=4, pch=19, ylim=c(-.2,1))    
+  points(synclist[[i]]$dist, synclist[[i]]$corres, xlab="distance", col=2, pch=19)    
 }
-synclist
+#synclist
 # par(mfrow=c(2,4))
 # for(i in 1:6) hist(synclist[[i]][,2], breaks=seq(-1,1,0.15))
 # for(i in 1:6) print(shapiro.test(synclist[[i]][,2]))
@@ -65,7 +63,7 @@ synclist
 
 ### Plots of synchrony with distance --------
 # spring seas, spring yr, Fall seas, Fall Yr, Spring raw, Fall Raw
-pdf("Plots/scale_sync_4models_overlayed.pdf", width = 7.7, height= 5.4)
+pdf("Plots/scale_sync_4models_overlayed2.pdf", width = 7.7, height= 5.4)
 j=1 # parameter for the legend
 mainlabel <- c("(I)", "(II)", "(III)","(IV)")
 par(mfrow=c(1,4), mar=c(5, 1, 2, 2) + 0.1 , mai=c(.6, .1, .2, .1),oma=c(.5, 4, 1.5, 1.5))

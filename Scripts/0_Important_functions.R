@@ -1,33 +1,8 @@
 # Important functions ####
 
-## synchrony function smooth ####
-gps <- read.csv2("Data/gps.csv")
-
-sync_df5 <- function(res, round=0, dist_mat=gps$cumdist, method="pearson")
-  # residuals as a smooth function of distance
-  {
-  distmat <- stats :: dist(dist_mat, upper = TRUE, diag = TRUE)
-  m <- data.frame(t(combn(as.numeric(rownames(gps)),2)), dist=as.numeric(distmat))
-  
-  CR2 <- cor(res, method=method)
-  CR2[upper.tri(CR2)] <- NA
-  diag(CR2) <- NA
-  nCR <- reshape2::melt(CR2, varnames = c('X2', 'X1'), na.rm = TRUE)
-  colnames(nCR)[3] <- "corres"
-  
-  mat2 <- dplyr::left_join(m,nCR)
-  mat3 <- arrange(mat2, dist)
-  mat3$dist <- round(mat3$dist, round)
-  mat4 <- aggregate(corres~dist, data=mat3, FUN=mean)
-  
-  return(mat4)
-}
-
-
-
-## functions for R squared ####
-
+# Compute Bayesian R-squared ------
 fitted_samples <- function(inlafit, ns=200)
+  # obtain fitted value samples using inla.posterior.sample
 {
   Lp <- nrow(inlafit$summary.fixed) # length of predictor
   
@@ -48,9 +23,10 @@ fitted_samples <- function(inlafit, ns=200)
   
   return(samp_pred)
 }
-#inlafit <- spring_Ab
-#y_obs <- stackeddata$S_t.x
+
+
 residual_samples <- function(y_obs, inlafit, ns=200, mean = FALSE)
+  # computed residuals for all the fitted values samples
   # y_obs is the observed Y
   # y_pred is the marginal distribution matrix given by fitted_margins
 {
@@ -61,8 +37,10 @@ residual_samples <- function(y_obs, inlafit, ns=200, mean = FALSE)
 }
 
 
-
 inla_R2 <-function(y_obs, inlafit, ns=200)
+  # compute Bayesian R^2
+  # y_obs is the observed data
+  # inlafit is the model
 {
   
   y_pred <- fitted_samples(inlafit,ns=ns)
@@ -70,14 +48,36 @@ inla_R2 <-function(y_obs, inlafit, ns=200)
   var_ypred <- apply(y_pred,2,var)
   var_res <- apply(y_res,2,var)
   
+  # Gelman et al 2019 formula
   r_sample <- var_ypred/(var_ypred+var_res)
   summary(r_sample)
   return(r_sample)
   
 } 
 
+# Obtain Correlogram functions ------
+gps <- read.csv2("Data/gps.csv")
 
-# m <- data.frame(t(combn(as.numeric(rownames(gps)),2)), dist=as.numeric(distmat))
+sync_df5 <- function(res, round=0, dist_mat=gps$cumdist, method="pearson")
+  # residuals as a smooth function of distance
+  # round will define how smooth is the approximation, round=0 corresponds to approximation to the unit
+{
+  distmat <- stats :: dist(dist_mat, upper = TRUE, diag = TRUE)
+  m <- data.frame(t(combn(as.numeric(rownames(gps)),2)), dist=as.numeric(distmat))
+  
+  CR2 <- cor(res, method=method)
+  CR2[upper.tri(CR2)] <- NA
+  diag(CR2) <- NA
+  nCR <- reshape2::melt(CR2, varnames = c('X2', 'X1'), na.rm = TRUE)
+  colnames(nCR)[3] <- "corres"
+  
+  mat2 <- dplyr::left_join(m,nCR)
+  mat3 <- arrange(mat2, dist)
+  mat3$dist <- round(mat3$dist, round)
+  mat4 <- aggregate(corres~dist, data=mat3, FUN=mean)
+  
+  return(mat4)
+}
 
 rescor_distance <- function(res, round=0, dist_mat=gps$cumdist, method="spearman", nstations=19){
   res <- matrix(res, ncol=nstations)
@@ -118,3 +118,4 @@ residual_correlation <- function(inlamodel, y_obs,round=0, FUNCTION=mean)
   return(xa2)
   
 }
+
