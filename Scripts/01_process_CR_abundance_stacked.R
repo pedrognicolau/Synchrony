@@ -1,7 +1,9 @@
 # read and process abundance data ----
+# Join abundance files computed in the CRINLA_zeroc3 file and the station data
+# and process files to obtain abundance on previous years
 abundanceCR <- readRDS("Data/Abundance_CRINLA_zeroc3.rds")
-gps <- read.csv2("Data/gps.csv")
-
+source("Scripts/0_Important_functions.R")
+library(dplyr)
 gps1 <- select(gps,station,distance,cumdist)
 gps1$region <- c(rep(1,5),rep(2,7),rep(3,7))
 
@@ -19,16 +21,6 @@ springdata$Ft <- falldata$logCR
 
 springdata2 <- left_join(springdata,gps1)
 seasondata <- select(springdata2,year,region,station,distance,cumdist,St,Ft)
-# 
-# 
-# agg_year <- aggregate(inlacr~year,data=abundanceCR, FUN=mean)
-# plot(agg_year, type="b")
-# low_years <- c(1,5,9,10,14,19)
-# peak_years <- c(3,8,12,17,21)
-# mean(agg_year$inlacr[low_years])
-# mean(agg_year$inlacr[peak_years])
-# 
-# quantile(agg_year$inlacr, c(.25,.75))
 
 # compute abundance on previous time points for each season ----
 # spring

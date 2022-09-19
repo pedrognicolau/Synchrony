@@ -1,6 +1,7 @@
 # Important functions ####
 
-# Compute Bayesian R-squared ------
+# Functions to Compute Bayesian R-squared ------
+  # sample from the posterior
 fitted_samples <- function(inlafit, ns=200)
   # obtain fitted value samples using inla.posterior.sample
 {
@@ -24,11 +25,13 @@ fitted_samples <- function(inlafit, ns=200)
   return(samp_pred)
 }
 
-
+  # compute Bayesian residuals
 residual_samples <- function(y_obs, inlafit, ns=200, mean = FALSE)
   # computed residuals for all the fitted values samples
   # y_obs is the observed Y
   # y_pred is the marginal distribution matrix given by fitted_margins
+  # ns is number of samples from posterior
+  # mean = TRUE gives mean residuals (1 vector), mean = FALSE gives vector of residuals
 {
   samppred <- fitted_samples(inlafit, ns=ns)
   residual_samples <- samppred-y_obs
@@ -36,7 +39,7 @@ residual_samples <- function(y_obs, inlafit, ns=200, mean = FALSE)
   return(residual_samples)
 }
 
-
+  # Bayesian R^2 function
 inla_R2 <-function(y_obs, inlafit, ns=200)
   # compute Bayesian R^2
   # y_obs is the observed data
@@ -56,8 +59,10 @@ inla_R2 <-function(y_obs, inlafit, ns=200)
 } 
 
 # Obtain Correlogram functions ------
+# data gps locations
 gps <- read.csv2("Data/gps.csv")
 
+# smooth function 
 sync_df5 <- function(res, round=0, dist_mat=gps$cumdist, method="pearson")
   # residuals as a smooth function of distance
   # round will define how smooth is the approximation, round=0 corresponds to approximation to the unit

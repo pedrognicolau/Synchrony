@@ -21,7 +21,6 @@ for(i in 1:length(popres))
 ### Obtain raw correlations as a function of distance (I) -----
 Springcor <- sync_df5(matrix(stackeddata$St,ncol=19)) # raw
 Fallcor <- sync_df5(matrix(stackeddata$Ft,ncol=19))
-mean(Fallcor$corres)
 # append raw correlation synchrony
 synclist <- append(list(Springcor,Fallcor),synclist_p)
 

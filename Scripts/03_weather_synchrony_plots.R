@@ -28,32 +28,6 @@ FCorIV <- melt_covm(cor(res4synch$Ft_IV), colname="cor") # from model synchrony 
 
 res_list <- list(SCorIV, FCorIV)
 reslab <- c("Spring","Fall")
-par(mfrow=c(2,2), mar=c(5, 4, 4, 2) + 0.1)
-# spring
-
-for (i in 1:2){
-  dat1 <- res_list[[i]]
-  #plot(DMat$distance,dat1$cor, ylab= "res corr", xlab = "distance", main=reslab[i], ylim=c(-.2,1))
-  # lines(smooth.spline(DMat$distance,dat1$cor, spar=1.2), xlab = "distance", col = i)
-  #abline(h=0, lty=2)
-  
-  plot(ZCor$ZCw_cor,dat1$cor, ylab= "res corr", xlab = "Winter Zero crosses cor", main=reslab[i], ylim=c(-.2,1))
-  lines(smooth.spline(ZCor$ZCw_cor,dat1$cor, spar=1.2), type="l", ylim=c(0,1), col=i, lwd=3)
-  abline(h=0, lty=2)
-  
-  #plot(wTEMPmCor$cor,dat1$cor, ylab= "res corr", xlab = "Temperature cor", main=reslab[i], ylim=c(-.2,1))
-  #lines(smooth.spline(wTempCor$cor,dat1$cor, spar=1.2), type="l", ylim=c(0,1), col=i, lwd=3)
-  #abline(h=0, lty=2)
-  
-  #plot(wPRECsCor$cor,SCor$cor, ylab= "correlation residuals", xlab = "Winter Prec correlation")
-  #lines(smooth.spline(wPRECsCor$cor,SCor$cor, spar=1.2), type="l", ylim=c(0,1), col="green",)
-  
-  plot(WRCor$cor,dat1$cor, ylab= "res corr", xlab = "Winter Rainfall cor", main=reslab[i], ylim=c(-.2,1))
-  lines(smooth.spline(WRCor$cor,dat1$cor, spar=1.2), type="l", ylim=c(0,1), col=i, lwd=3)
-  abline(h=0, lty=2)
-  
-}
-
 
 syncdata <- SCorIV
 colnames(syncdata)[3] <- "SpringIV"
@@ -99,6 +73,7 @@ syncmet2 <- INLA::inla(corres ~ f(dist, model="rw2", scale.model = TRUE,
 par(mfrow=c(2,1))
 
 
+## PLOTS ----------
 
 varlist <- list(syncdata4$ZeroCrosses,syncdata4$ZeroCrosses,
                 syncdata4$WinterRainfall,syncdata4$WinterRainfall)
@@ -112,8 +87,8 @@ mains=c("b) Spring","c) Fall","","")
 # plot(sync_df5(WRain))
 #plot(sync_df5(ZCw), xlab="Zero Cross Synchrony", ylab="Population synchrony",
 #     pch=19, col=scales::alpha("gray30",.7))
-
-par(mfrow=c(2,3), mar=c(6, 2, 2, 2) + 0.1 , mai=c(.8, .6, .2, .1),oma=c(.5, 2, 1.5, 1.5))
+pdf("Plots/weather_effects.pdf", width = 7.9, height= 6.2)
+par(mfrow=c(2,3), mar=c(6, 2, 2, 2) + 0.1 , mai=c(.8, .6, .4, .1),oma=c(.5, 2, 2, 1.5))
 for(i in 1:4)
 {
   # zero cross synchrony
@@ -126,7 +101,7 @@ for(i in 1:4)
     Axis(side=1, labels=TRUE, line=1, at=c(0,50, 100, 150))
     Axis(side=2, labels=TRUE, line=1, at=c(-.5,0,0.5,1))
     title(main = "a) Weather", cex.lab = 2,
-          line = .7)
+          line = 1)
     title(ylab = "Zero Crosses Synchrony", cex.lab = 1.2,
           line = 3.5)
     title(xlab = "Distance (km)", cex.lab = 1.2, line = 3.5)
@@ -135,7 +110,8 @@ for(i in 1:4)
     lines(zcdf$dist, syncmet1$summary.fitted.values$mean, xlab="", ylab=expression(Ro), 
           ylim=c(0,.7), main="", type="l", lwd=2, col="gray10")    
     min_a <- pmin(syncmet1$summary.fitted.values$`0.025quant`)
-    max_a <- pmax(syncmet1$summary.fitted.values$`0.975quant`)
+    max_a0 <- pmax(syncmet1$summary.fitted.values$`0.975quant`)
+    max_a <- ifelse(max_a0>1,1,max_a0)
     polygon(
       c(
         zcdf$dist,
@@ -148,6 +124,7 @@ for(i in 1:4)
     
     # plot(sync_df5(ZCw), xlab="distance", ylab="Zero Cross Synchrony", pch=19, ylim=c(-.2,1), main="a) Weather Synchrony")
   }
+  # winter rainfall synch
   if(i==3) 
     {
     
@@ -164,7 +141,8 @@ for(i in 1:4)
     lines(zcdf$dist, syncmet2$summary.fitted.values$mean, xlab="", ylab=expression(Ro), 
           ylim=c(0,.7), main="", type="l", lwd=2, col="gray10")    
     min_a <- pmin(syncmet2$summary.fitted.values$`0.025quant`)
-    max_a <- pmax(syncmet2$summary.fitted.values$`0.975quant`)
+    max_a0 <- pmax(syncmet2$summary.fitted.values$`0.975quant`)
+    max_a <- ifelse(max_a0>1,1,max_a0)    
     polygon(
       c(
         zcdf$dist,
@@ -182,7 +160,7 @@ for(i in 1:4)
   plot(varlist[[i]], seaslist[[i]], xlab="", ylab=" ",
        pch=19, col=scales::alpha("gray60",.7),ylim=c(-.2,.8), main=)
   title(main = mains[i], cex.lab = 3.5,
-        line = .8)
+        line = 1)
   title(ylab = "Population Synchrony", cex.lab = 1.2,
         line = 2.5)
   title(xlab = plotlab[i], cex.lab = 1.2, line = 3.5)
@@ -190,8 +168,4 @@ for(i in 1:4)
   lines(sort(varlist[[i]]),sort(modsweather[[i]]$summary.fitted.values$`0.025quant`), lty=2, col=colsplot[i], lwd=1)
   lines(sort(varlist[[i]]),sort(modsweather[[i]]$summary.fitted.values$`0.975quant`), lty=2, col=colsplot[i], lwd=1)
 }
-
-
-###
-gps <- read.csv2("Vole synchrony/Data/gps.csv")
-par(mfrow=c(3,4))
+dev.off()
