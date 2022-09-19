@@ -131,7 +131,8 @@ popmodels <- list(St_II=St_II,St_III=St_III,St_IV=St_IV,
 
 source("Scripts/0_Important_functions.R")
 
-# obtain residuals using Bayesian sample
+# obtain 200 samples of residuals using Bayesian sample
+# mean=TRUE gives the mean of the residuals
 St_II_res <- matrix(residual_samples(stackeddata$St, St_II, ns=200, mean = TRUE),ncol=19)
 Ft_II_res <- matrix(residual_samples(stackeddata$Ft, Ft_II, ns=200, mean = TRUE),ncol=19)
 St_III_res <- matrix(residual_samples(stackeddata$St, St_III, ns=200, mean = TRUE),ncol=19)
@@ -167,7 +168,6 @@ plot(1, type="n", xlab="",ylab="", ylim=c(-1, 1), xlim=c(1,12), xaxt="n",
      yaxt="n", frame.plot = FALSE)
 
 plotCI(1:12,y= datx[,4],datx[,5]-datx[,4],datx[,4]-datx[,3], col=rep(c(4,3,7),4), add=TRUE)
-datx <- ss[-1,]
 Axis(side=2)
 abline(h=0, lty=3)
 abline(v=c(3.5,6.5,9.5),lty=1)
