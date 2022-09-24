@@ -1,4 +1,4 @@
-# Structure of Folders 
+# Scripts for Seasonality, density dependence and spatial population synchrony
  
 This project corresponds to the scripts and data files used for the manuscript "Seasonality, density dependence and spatial population synchrony" by Pedro G. Nicolau, Rolf A. Ims, Sigrunn H. Sørbye & Nigel G. Yoccoz
 
